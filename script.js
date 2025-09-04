@@ -318,7 +318,23 @@ class DashboardManager {
         const departmentFilter = document.getElementById("departmentFilter").value;
         const performanceFilter = document.getElementById("performanceFilter").value;
 
-        this.filteredData = this.data.groups.filter(group => {
+        // Cria uma cópia profunda dos grupos para não modificar os dados originais
+        let filteredGroups = JSON.parse(JSON.stringify(this.data.groups));
+
+        if (departmentFilter !== "all") {
+            filteredGroups = filteredGroups.map(group => {
+                // Filtra os indicadores dentro de cada grupo pelo departamento
+                const indicatorsFilteredByDepartment = group.indicators.filter(indicator => 
+                    indicator.details.some(detail => 
+                        detail.Departamento === departmentFilter
+                    )
+                );
+                // Retorna o grupo com os indicadores filtrados
+                return { ...group, indicators: indicatorsFilteredByDepartment };
+            }).filter(group => group.indicators.length > 0); // Remove grupos vazios
+        }
+
+        this.filteredData = filteredGroups.filter(group => {
             // Filtro de status: verifica se algum indicador dentro do grupo tem o status selecionado
             if (statusFilter !== "all") {
                 const hasMatchingStatus = group.indicators.some(indicator => 
@@ -327,16 +343,6 @@ class DashboardManager {
                     )
                 );
                 if (!hasMatchingStatus) return false;
-            }
-
-            // Filtro de departamento: verifica se algum indicador dentro do grupo pertence ao departamento selecionado
-            if (departmentFilter !== "all") {
-                const hasMatchingDepartment = group.indicators.some(indicator => 
-                    indicator.details.some(detail => 
-                        detail.Departamento === departmentFilter
-                    )
-                );
-                if (!hasMatchingDepartment) return false;
             }
 
             // Filtro de performance para o grupo
@@ -452,4 +458,5 @@ document.head.appendChild(style);
 document.addEventListener("DOMContentLoaded", () => {
     new DashboardManager();
 });
+
 
