@@ -68,7 +68,7 @@ class DashboardManager {
             this.updateDashboard();
         } catch (error) {
             console.error("Erro ao carregar dados:", error);
-            this.showNotification("Erro ao carregar dados iniciais. Verifique se \'processed_data.json\' existe.", "error");
+            this.showNotification("Erro ao carregar dados iniciais. Verifique se 'processed_data.json' existe.", "error");
         }
     }
 
@@ -76,7 +76,7 @@ class DashboardManager {
         const refreshBtn = document.getElementById("refreshBtn");
         const originalText = refreshBtn.innerHTML;
         
-        refreshBtn.innerHTML = \'<div class="loading"></div> Atualizando...\';
+        refreshBtn.innerHTML = '<div class="loading"></div> Atualizando...';
         refreshBtn.disabled = true;
 
         try {
@@ -104,7 +104,7 @@ class DashboardManager {
         const uploadBtn = document.getElementById("uploadBtn");
         const originalText = uploadBtn.innerHTML;
         
-        uploadBtn.innerHTML = \'<div class="loading"></div> Processando...\';
+        uploadBtn.innerHTML = '<div class="loading"></div> Processando...';
         uploadBtn.disabled = true;
 
         try {
@@ -167,7 +167,7 @@ class DashboardManager {
             )
         )].filter(dept => dept).sort();
 
-        departmentFilter.innerHTML = \'<option value="all">Todos</option>\';
+        departmentFilter.innerHTML = '<option value="all">Todos</option>';
         departments.forEach(dept => {
             const option = document.createElement("option");
             option.value = dept;
@@ -183,7 +183,7 @@ class DashboardManager {
         const count = document.getElementById("indicatorsCount");
         
         count.textContent = this.filteredData.length;
-        grid.innerHTML = \'\';
+        grid.innerHTML = '';
 
         this.filteredData.forEach((group, index) => {
             const card = this.createGroupCard(group, index);
