@@ -68,7 +68,7 @@ class DashboardManager {
             this.updateDashboard();
         } catch (error) {
             console.error("Erro ao carregar dados:", error);
-            this.showNotification("Erro ao carregar dados iniciais. Verifique se 'processed_data.json' existe.", "error");
+            this.showNotification("Erro ao carregar dados iniciais. Verifique se \'processed_data.json\' existe.", "error");
         }
     }
 
@@ -76,7 +76,7 @@ class DashboardManager {
         const refreshBtn = document.getElementById("refreshBtn");
         const originalText = refreshBtn.innerHTML;
         
-        refreshBtn.innerHTML = '<div class="loading"></div> Atualizando...';
+        refreshBtn.innerHTML = \'<div class="loading"></div> Atualizando...\';
         refreshBtn.disabled = true;
 
         try {
@@ -104,7 +104,7 @@ class DashboardManager {
         const uploadBtn = document.getElementById("uploadBtn");
         const originalText = uploadBtn.innerHTML;
         
-        uploadBtn.innerHTML = '<div class="loading"></div> Processando...';
+        uploadBtn.innerHTML = \'<div class="loading"></div> Processando...\';
         uploadBtn.disabled = true;
 
         try {
@@ -167,7 +167,7 @@ class DashboardManager {
             )
         )].filter(dept => dept).sort();
 
-        departmentFilter.innerHTML = '<option value="all">Todos</option>';
+        departmentFilter.innerHTML = \'<option value="all">Todos</option>\';
         departments.forEach(dept => {
             const option = document.createElement("option");
             option.value = dept;
@@ -183,7 +183,7 @@ class DashboardManager {
         const count = document.getElementById("indicatorsCount");
         
         count.textContent = this.filteredData.length;
-        grid.innerHTML = '';
+        grid.innerHTML = \'\';
 
         this.filteredData.forEach((group, index) => {
             const card = this.createGroupCard(group, index);
@@ -277,59 +277,38 @@ class DashboardManager {
                 </div>
             </div>
             <h4>Indicadores neste Grupo:</h4>
+            <div class="indicator-list">
             ${group.indicators.map(indicator => `
-                <div class="detail-item">
+                <div class="indicator-list-item">
                     <h5>${indicator.name}</h5>
-                    <div class="detail-info">
-                        <div class="detail-info-item">
-                            <div class="detail-info-label">Pontuação Atingida</div>
-                            <div class="detail-info-value">${indicator.total_atingida.toFixed(2)}</div>
-                        </div>
-                        <div class="detail-info-item">
-                            <div class="detail-info-label">Pontuação Máxima</div>
-                            <div class="detail-info-value">${indicator.total_maxima.toFixed(2)}</div>
-                        </div>
-                        <div class="detail-info-item">
-                            <div class="detail-info-label">Percentual</div>
-                            <div class="detail-info-value">${indicator.percentage.toFixed(2)}%</div>
-                        </div>
+                    <div class="indicator-list-details">
+                        <span>Pontuação: ${indicator.total_atingida.toFixed(2)} / ${indicator.total_maxima.toFixed(2)}</span>
+                        <span>Percentual: ${indicator.percentage.toFixed(2)}%</span>
                     </div>
-                    <h6 style="margin-top: 15px;">Detalhes do Indicador:</h6>
-                    ${indicator.details.map((detail, idx) => `
-                        <div class="detail-item" style="margin-top: 10px; border-left: 2px solid #a0aec0; padding: 15px;">
-                            <div class="detail-info">
-                                <div class="detail-info-item">
-                                    <div class="detail-info-label">Sub-Grupo</div>
-                                    <div class="detail-info-value">${detail['Sub-Grupo'] || 'N/A'}</div>
-                                </div>
-                                <div class="detail-info-item">
-                                    <div class="detail-info-label">Departamento</div>
-                                    <div class="detail-info-value">${detail.Departamento || 'N/A'}</div>
-                                </div>
-                                <div class="detail-info-item">
-                                    <div class="detail-info-label">Sub-Categoria</div>
-                                    <div class="detail-info-value">${detail['Sub-Categoria'] || 'N/A'}</div>
-                                </div>
-                                <div class="detail-info-item">
-                                    <div class="detail-info-label">Status</div>
-                                    <div class="detail-info-value">${detail.Status || 'N/A'}</div>
-                                </div>
-                                <div class="detail-info-item">
-                                    <div class="detail-info-label">Pontuação Atingida</div>
-                                    <div class="detail-info-value">${detail['Pontuação Atingida']?.toFixed(2) || '0.00'}</div>
-                                </div>
-                                <div class="detail-info-item">
-                                    <div class="detail-info-label">Pontuação Máxima</div>
-                                    <div class="detail-info-value">${detail['Pontuação Máxima']?.toFixed(2) || '0.00'}</div>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
+                    <div class="indicator-sub-details">
+                        ${indicator.details.map(detail => {
+                            const detailPercentage = (detail['Pontuação Atingida'] / detail['Pontuação Máxima'] * 100) || 0;
+                            return `
+                                <p>
+                                    <strong>Sub-Grupo:</strong> ${detail['Sub-Grupo'] || 'N/A'} | 
+                                    <strong>Departamento:</strong> ${detail.Departamento || 'N/A'} | 
+                                    <strong>Status:</strong> ${detail.Status || 'N/A'} | 
+                                    <strong>% Penetração:</strong> ${detailPercentage.toFixed(2)}% | 
+                                    <strong>Pontuação:</strong> ${detail['Pontuação Atingida']?.toFixed(2) || '0.00'} / ${detail['Pontuação Máxima']?.toFixed(2) || '0.00'}
+                                </p>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
             `).join('')}
+            </div>
         `;
 
         modal.style.display = "block";
+    }
+
+    closeModal() {
+        document.getElementById("detailModal").style.display = "none";
     }
 
     applyFilters() {
