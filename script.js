@@ -292,7 +292,7 @@ class DashboardManager {
                             <span>Sub Categoria</span>
                             <span>Status</span>
                             <span>% Penetração</span>
-                            <span>Pontuação</span>
+                            <span>Realizado | Máxima</span>
                         </div>
                         ${indicator.details.map(detail => {
                             const detailPercentage = (detail['Pontuação Atingida'] / detail['Pontuação Máxima'] * 100) || 0;
@@ -300,10 +300,10 @@ class DashboardManager {
                                 <p>
                                     <span>${detail['Sub-Grupo'] || 'N/A'}</span>
                                     <span>${detail.Departamento || 'N/A'}</span>
-                                    <span>${detail.Sub_Categoria || 'N/A'}</span>
+                                    <span>${detail.Sub-Categoria || 'N/A'}</span>
                                     <span>${detail.Status || 'N/A'}</span>
                                     <span>${detailPercentage.toFixed(2)}%</span>
-                                    <span>${detail['Pontuação Atingida']?.toFixed(2) || '0.00'} / ${detail['Pontuação Máxima']?.toFixed(2) || '0.00'}</span>
+                                    <span>${detail['Pontuação Atingida']?.toFixed(2) || '0.00'} | ${detail['Pontuação Máxima']?.toFixed(2) || '0.00'}</span>
                                 </p>
                             `;
                         }).join('')}
