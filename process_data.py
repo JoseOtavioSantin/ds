@@ -19,12 +19,12 @@ def process_data(data):
     for item in data:
         grupo = item.get("Grupo")
         indicador = item.get("Indicador")
-        sub_grupo = item.get("Sub-Grupo")
+        sub_grupo = item.get("Sub_Grupo") # Usar Sub_Grupo conforme renomeado no read_excel.py
         departamento = item.get("Departamento")
-        sub_categoria = item.get("Sub-Categoria")
+        sub_categoria = item.get("Sub_Categoria") # Usar Sub_Categoria conforme renomeado no read_excel.py
         status = item.get("Status")
-        pontuacao_atingida = item.get("Pontuação Atingida", 0.0)
-        pontuacao_maxima = item.get("Pontuação Máxima", 0.0)
+        pontuacao_atingida = item.get("Pontuação_Atingida", 0.0) # Usar Pontuação_Atingida
+        pontuacao_maxima = item.get("Pontuação_Máxima", 0.0) # Usar Pontuação_Máxima
 
         total_pontuacao_atingida += pontuacao_atingida
         total_pontuacao_maxima += pontuacao_maxima
@@ -101,4 +101,5 @@ if __name__ == '__main__':
     with open('/home/ubuntu/processed_data.json', 'w') as f:
         json.dump(processed_data, f, indent=4)
     print('Dados processados e salvos em processed_data.json')
+
 

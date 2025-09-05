@@ -286,15 +286,24 @@ class DashboardManager {
                         <span>Percentual: ${indicator.percentage.toFixed(2)}%</span>
                     </div>
                     <div class="indicator-sub-details">
+                        <div class="sub-indicator-header">
+                            <span>Sub-Grupo</span>
+                            <span>Departamento</span>
+                            <span>Sub Categoria</span>
+                            <span>Status</span>
+                            <span>% Penetração</span>
+                            <span>Pontuação</span>
+                        </div>
                         ${indicator.details.map(detail => {
                             const detailPercentage = (detail['Pontuação Atingida'] / detail['Pontuação Máxima'] * 100) || 0;
                             return `
                                 <p>
-                                    <strong>Sub-Grupo:</strong> ${detail['Sub-Grupo'] || 'N/A'} | 
-                                    <strong>Departamento:</strong> ${detail.Departamento || 'N/A'} | 
-                                    <strong>Status:</strong> ${detail.Status || 'N/A'} | 
-                                    <strong>% Penetração:</strong> ${detailPercentage.toFixed(2)}% | 
-                                    <strong>Pontuação:</strong> ${detail['Pontuação Atingida']?.toFixed(2) || '0.00'} / ${detail['Pontuação Máxima']?.toFixed(2) || '0.00'}
+                                    <span>${detail['Sub-Grupo'] || 'N/A'}</span>
+                                    <span>${detail.Departamento || 'N/A'}</span>
+                                    <span>${detail.Sub_Categoria || 'N/A'}</span>
+                                    <span>${detail.Status || 'N/A'}</span>
+                                    <span>${detailPercentage.toFixed(2)}%</span>
+                                    <span>${detail['Pontuação Atingida']?.toFixed(2) || '0.00'} / ${detail['Pontuação Máxima']?.toFixed(2) || '0.00'}</span>
                                 </p>
                             `;
                         }).join('')}
@@ -458,5 +467,4 @@ document.head.appendChild(style);
 document.addEventListener("DOMContentLoaded", () => {
     new DashboardManager();
 });
-
 
