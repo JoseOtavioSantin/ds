@@ -292,7 +292,7 @@ class DashboardManager {
                             <span>Sub Categoria</span>
                             <span>Status</span>
                             <span>% Penetração</span>
-                            <span>Realizado | Máxima</span>
+                            <span>Pontuação</span>
                         </div>
                         ${indicator.details.map(detail => {
                             const detailPercentage = (detail['Pontuação Atingida'] / detail['Pontuação Máxima'] * 100) || 0;
