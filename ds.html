@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard com Múltiplas Visões</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' );
+        :root {
+            --primary-color: #6366f1; --background-color: #f8f9fa; --card-background: #ffffff;
+            --text-color: #1f2937; --subtle-text-color: #6b7280; --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.07);
+            --progress-bar-bg: #e5e7eb; --progress-bar-fill: #f59e0b;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; padding: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .header-title { display: flex; align-items: center; gap: 1.5rem; }
+        .header h1 { font-size: 1.875rem; font-weight: 700; margin: 0; }
+        .upload-btn { display: flex; align-items: center; gap: 0.5rem; background-color: var(--primary-color); color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s ease; }
+        .upload-btn:hover { background-color: #4f46e5; }
+        #file-input { display: none; }
+        .view-switcher { display: flex; background-color: #eef2ff; border-radius: 0.5rem; padding: 0.25rem; }
+        .view-btn { background-color: transparent; border: none; color: var(--subtle-text-color); padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+        .view-btn.active { background-color: var(--primary-color); color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .ranking-section { background-color: var(--card-background); border-radius: 0.75rem; padding: 2rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+        .ranking-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;}
+        .ranking-header h2 { font-size: 1.5rem; margin: 0; }
+        .total-score-display { font-size: 1.1rem; font-weight: 600; text-align: right; }
+        .total-score-display .score-value { color: var(--primary-color); font-size: 1.75rem; }
+        .total-score-display .percentage-value { color: var(--progress-bar-fill); font-size: 1.75rem; }
+        .ranking-tiers { display: flex; flex-direction: column; gap: 0.75rem; }
+        .tier { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-radius: 0.5rem; background-color: #f3f4f6; transition: all 0.3s ease; }
+        .tier-name { font-weight: 600; font-size: 1rem; text-transform: uppercase; }
+        .tier-range { font-size: 0.9rem; color: var(--subtle-text-color); font-weight: 500; }
+        .tier.active { background: linear-gradient(90deg, #4f46e5, #6366f1); color: white; transform: scale(1.02); box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2); }
+        .tier.active .tier-range { color: #e0e7ff; }
+        .filter-section { display: flex; gap: 0.75rem; margin-bottom: 2.5rem; padding: 1rem 0; }
+        .filter-btn { background-color: var(--card-background); border: 1px solid var(--border-color); color: var(--subtle-text-color); padding: 0.5rem 1rem; border-radius: 99px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+        .filter-btn:hover { background-color: #f3f4f6; }
+        .filter-btn.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        #dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .data-card { background-color: var(--card-background); border-radius: 0.75rem; padding: 1.5rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 1rem; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease; }
+        .data-card.hidden { display: none; }
+        .data-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.05); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .card-header h3 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+        .status-badge { padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; background-color: #dcfce7; color: #166534; }
+        .status-badge.inactive { background-color: #fee2e2; color: #991b1b; }
+        .card-body .score { font-size: 2.5rem; font-weight: 700; }
+        .card-body .score-max { font-size: 1rem; color: var(--subtle-text-color); font-weight: 500; }
+        .progress-bar { width: 100%; height: 0.5rem; background-color: var(--progress-bar-bg); border-radius: 99px; margin-top: 0.5rem; }
+        .progress-fill { height: 100%; background-color: var(--progress-bar-fill); border-radius: 99px; }
+        .card-body .percentage { font-size: 1rem; font-weight: 600; color: var(--subtle-text-color); margin-top: 0.5rem; }
+        .card-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; color: var(--subtle-text-color); font-weight: 500; }
+        #placeholder { text-align: center; padding: 4rem; background-color: var(--card-background); border-radius: 0.75rem; border: 2px dashed var(--border-color); grid-column: 1 / -1; }
+        #placeholder .icon { font-size: 3rem; color: var(--border-color); margin-bottom: 1rem; }
+        #placeholder p { font-size: 1.1rem; color: var(--subtle-text-color); font-weight: 500; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(17, 24, 39, 0.6); display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; z-index: 1000; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-container { background-color: var(--card-background); border-radius: 0.75rem; padding: 0; width: 90%; max-width: 800px; max-height: 85vh; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay.visible .modal-container { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; }
+        .close-modal-btn { background: none; border: none; font-size: 1.5rem; color: var(--subtle-text-color); cursor: pointer; }
+        .modal-filters { padding: 1rem 2rem; border-bottom: 1px solid var(--border-color); }
+        .modal-body { padding: 1rem 2rem 2rem 2rem; overflow-y: auto; }
+        .sub-group { margin-bottom: 2rem; }
+        .sub-group h4 { font-size: 1.1rem; font-weight: 600; margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); }
+        .indicator-table { width: 100%; border-collapse: collapse; }
+        .indicator-table tr { transition: display 0.3s; }
+        .indicator-table th, .indicator-table td { text-align: left; padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); }
+        .indicator-table th { font-weight: 600; font-size: 0.8rem; text-transform: uppercase; color: var(--subtle-text-color); }
+        .indicator-table tr:last-child td { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-title">
+                <h1>Dashboard</h1>
+                <div class="view-switcher">
+                    <button class="view-btn active" data-view="byGroup">Visão por Grupo</button>
+                    <button class="view-btn" data-view="byDepartment">Visão por Depto.</button>
+                </div>
+            </div>
+            <label for="file-input" class="upload-btn"><i class="fa-solid fa-upload"></i> Carregar Excel</label>
+            <input type="file" id="file-input" accept=".xlsx, .xls">
+        </div>
+        <div class="ranking-section" id="ranking-section" style="display: none;">
+            <div class="ranking-header">
+                <h2>Seu Nível Atual</h2>
+                <div class="total-score-display">
+                    Pontuação: <span class="score-value" id="total-score">0</span> | 
+                    Progresso: <span class="percentage-value" id="total-percentage">0%</span>
+                </div>
+            </div>
+            <div class="ranking-tiers" id="ranking-tiers-container"></div>
+        </div>
+        <div class="filter-section" id="filter-section" style="display: none;">
+            <button class="filter-btn active" data-filter="all">Todos</button>
+            <button class="filter-btn" data-filter="complete">Completos (100%)</button>
+            <button class="filter-btn" data-filter="incomplete">Incompletos</button>
+            <button class="filter-btn" data-filter="inactive">Contém Inativos</button>
+        </div>
+        <div id="dashboard-grid">
+            <div id="placeholder">
+                <div class="icon"><i class="fa-solid fa-table-cells-large"></i></div>
+                <p>Para começar, carregue seu arquivo Excel.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="details-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="modal-title">Detalhes</h2>
+                <button class="close-modal-btn" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-filters" id="modal-filters"></div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const rankingTiers = [
+            { name: 'BLUEBELT', min: 900, max: 1000 }, { name: 'PREMIUM', min: 800, max: 899 },
+            { name: 'ADVANCED', min: 700, max: 799 }, { name: 'STANDARD', min: 0, max: 699 }
+        ];
+        let fullData = [];
+        let currentView = 'byGroup';
+
+        document.getElementById('file-input').addEventListener('change', handleFile);
+
+        function handleFile(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                fullData = jsonData.map(row => {
+                    const newRow = {};
+                    for (const key in row) {
+                        const normalizedKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, '');
+                        newRow[normalizedKey] = row[key];
+                    }
+                    return newRow;
+                });
+                renderDashboard();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function renderDashboard() {
+            if (fullData.length === 0) return;
+            document.getElementById('filter-section').style.display = 'flex';
+            const grid = document.getElementById('dashboard-grid');
+            grid.innerHTML = '';
+
+            const dataToRender = (currentView === 'byGroup') ? aggregateByGroup() : aggregateByDepartment();
+            let grandTotalAtingido = 0, grandTotalMaximo = 0;
+
+            for (const [name, data] of Object.entries(dataToRender)) {
+                grandTotalAtingido += data.totalAtingido;
+                grandTotalMaximo += data.totalMaximo;
+                const card = createCard(name, data);
+                card.addEventListener('click', () => showDetailsModal(name));
+                grid.appendChild(card);
+            }
+            
+            // A pontuação total é a mesma para ambas as visões, então recalculamos a partir dos dados brutos
+            const totalScore = fullData.reduce((sum, row) => sum + (parseFloat(row.pontuacaoatingida) || 0), 0);
+            const totalMaxScore = fullData.reduce((sum, row) => sum + (parseFloat(row.pontuacaomaxima) || 0), 0);
+            updateRanking(totalScore, totalMaxScore);
+        }
+
+        function aggregateByGroup() {
+            return fullData.reduce((acc, row) => {
+                const group = row.grupo || 'Sem Grupo';
+                if (!acc[group]) { acc[group] = { totalAtingido: 0, totalMaximo: 0, subItems: new Set(), indicadoresCount: 0, hasInactive: false }; }
+                const atingido = parseFloat(row.pontuacaoatingida) || 0;
+                const maximo = parseFloat(row.pontuacaomaxima) || 0;
+                acc[group].totalAtingido += atingido; acc[group].totalMaximo += maximo; acc[group].indicadoresCount++;
+                if (row.departamento) acc[group].subItems.add(row.departamento);
+                if (row.status && row.status.toLowerCase() === 'inativo') { acc[group].hasInactive = true; }
+                return acc;
+            }, {});
+        }
+
+        function aggregateByDepartment() {
+            return fullData.reduce((acc, row) => {
+                const dept = row.departamento || 'Sem Depto.';
+                if (!acc[dept]) { acc[dept] = { totalAtingido: 0, totalMaximo: 0, subItems: new Set(), indicadoresCount: 0, hasInactive: false }; }
+                const atingido = parseFloat(row.pontuacaoatingida) || 0;
+                const maximo = parseFloat(row.pontuacaomaxima) || 0;
+                acc[dept].totalAtingido += atingido; acc[dept].totalMaximo += maximo; acc[dept].indicadoresCount++;
+                if (row.grupo) acc[dept].subItems.add(row.grupo);
+                if (row.status && row.status.toLowerCase() === 'inativo') { acc[dept].hasInactive = true; }
+                return acc;
+            }, {});
+        }
+
+        function createCard(name, data) {
+            const card = document.createElement('div');
+            card.className = 'data-card'; card.dataset.name = name;
+            const atingido = data.totalAtingido, maximo = data.totalMaximo;
+            const percent = maximo > 0 ? (atingido / maximo * 100) : 0;
+            const mainSubItem = data.subItems.size > 0 ? [...data.subItems][0] : 'N/A';
+            card.dataset.percent = percent; card.dataset.hasInactive = data.hasInactive;
+            card.innerHTML = `<div class="card-header"><h3>${name}</h3><span class="status-badge ${data.hasInactive ? 'inactive' : ''}">${data.hasInactive ? 'COM INATIVOS' : 'ATIVO'}</span></div><div class="card-body"><span class="score">${atingido.toFixed(2)}</span><span class="score-max">/ ${maximo.toFixed(2)}</span><div class="progress-bar"><div class="progress-fill" style="width: ${percent.toFixed(1)}%;"></div></div><div class="percentage">${percent.toFixed(1)}%</div></div><div class="card-footer"><span>${mainSubItem}</span><span>${data.indicadoresCount} indicador(es)</span></div>`;
+            return card;
+        }
+        
+        function updateRanking(totalAtingido, totalMaximo) {
+            const rankingSection = document.getElementById('ranking-section');
+            rankingSection.style.display = 'block';
+            document.getElementById('total-score').textContent = totalAtingido.toFixed(2);
+            const totalPercent = totalMaximo > 0 ? (totalAtingido / totalMaximo * 100) : 0;
+            document.getElementById('total-percentage').textContent = `${totalPercent.toFixed(1)}%`;
+            const tiersContainer = document.getElementById('ranking-tiers-container');
+            tiersContainer.innerHTML = ''; let activeTierFound = false;
+            rankingTiers.forEach(tier => {
+                const tierEl = document.createElement('div');
+                tierEl.className = 'tier';
+                tierEl.innerHTML = `<span class="tier-name">${tier.name}</span><span class="tier-range">${tier.min} - ${tier.max}</span>`;
+                if (!activeTierFound && totalAtingido >= tier.min && totalAtingido <= tier.max) { tierEl.classList.add('active'); activeTierFound = true; }
+                tiersContainer.appendChild(tierEl);
+            });
+        }
+
+        document.querySelectorAll('.view-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                currentView = button.dataset.view;
+                document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                renderDashboard();
+            });
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                applyFilter(button.dataset.filter);
+            });
+        });
+
+        function applyFilter(filter) {
+            const cards = document.querySelectorAll('.data-card');
+            cards.forEach(card => {
+                let show = false;
+                const percent = parseFloat(card.dataset.percent);
+                const hasInactive = card.dataset.hasInactive === 'true';
+                switch (filter) {
+                    case 'all': show = true; break;
+                    case 'complete': show = percent >= 100; break;
+                    case 'incomplete': show = percent < 100; break;
+                    case 'inactive': show = hasInactive; break;
+                }
+                card.style.display = show ? 'flex' : 'none';
+            });
+        }
+
+        const modalOverlay = document.getElementById('details-modal');
+        function showDetailsModal(name) {
+            document.getElementById('modal-title').textContent = `Detalhes de ${name}`;
+            
+            const primaryKey = currentView === 'byGroup' ? 'grupo' : 'departamento';
+            const secondaryKey = currentView === 'byGroup' ? 'departamento' : 'grupo';
+
+            const indicators = fullData.filter(row => (row[primaryKey] || (primaryKey === 'grupo' ? 'Sem Grupo' : 'Sem Depto.')) === name);
+            const indicatorsBySubGroup = indicators.reduce((acc, ind) => {
+                const subGroup = ind[secondaryKey] || 'Outros';
+                if (!acc[subGroup]) acc[subGroup] = [];
+                acc[subGroup].push(ind);
+                return acc;
+            }, {});
+
+            const modalBody = document.getElementById('modal-body');
+            modalBody.innerHTML = '';
+            for (const subGroupName in indicatorsBySubGroup) {
+                let tableHTML = `<div class="sub-group"><h4>${subGroupName}</h4><table class="indicator-table"><thead><tr><th>Indicador</th><th>Status</th><th>Pontuação</th></tr></thead><tbody>`;
+                indicatorsBySubGroup[subGroupName].forEach(ind => {
+                    const statusClass = ind.status && ind.status.toLowerCase() === 'ativo' ? 'active' : 'inactive';
+                    tableHTML += `<tr data-status="${statusClass}"><td>${ind.indicador || 'N/A'}</td><td><span class="status-badge ${statusClass}">${ind.status || 'N/A'}</span></td><td>${(parseFloat(ind.pontuacaoatingida) || 0).toFixed(2)} / ${(parseFloat(ind.pontuacaomaxima) || 0).toFixed(2)}</td></tr>`;
+                });
+                tableHTML += `</tbody></table></div>`;
+                modalBody.innerHTML += tableHTML;
+            }
+            
+            setupModalFilters();
+            modalOverlay.classList.add('visible');
+        }
+
+        function setupModalFilters() {
+            const modalFiltersContainer = document.getElementById('modal-filters');
+            modalFiltersContainer.innerHTML = `<button class="filter-btn active" data-modal-filter="all">Todos</button><button class="filter-btn" data-modal-filter="active">Ativos</button><button class="filter-btn" data-modal-filter="inactive">Inativos</button>`;
+            modalFiltersContainer.querySelectorAll('.filter-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    modalFiltersContainer.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    applyModalFilter(e.currentTarget.dataset.modalFilter);
+                });
+            });
+        }
+
+        function applyModalFilter(filter) {
+            const rows = document.querySelectorAll('#modal-body .indicator-table tr[data-status]');
+            rows.forEach(row => {
+                if (filter === 'all' || row.dataset.status === filter) { row.style.display = ''; } else { row.style.display = 'none'; }
+            });
+        }
+
+        document.getElementById('close-modal').addEventListener('click', () => modalOverlay.classList.remove('visible'));
+        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) modalOverlay.classList.remove('visible'); });
+    </script>
+
+</body>
+</html>
