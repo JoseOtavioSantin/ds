@@ -5,59 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard NH360 Performance</title>
     
-    <!-- SDKs do Firebase (versões compatíveis para facilitar o uso) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
-    
-    <!-- Biblioteca para ler arquivos Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* --- Paleta de Cores New Holland --- */
         :root {
-            --nh-blue: #004a9f;      /* Azul principal da New Holland */
-            --nh-yellow: #ffcd00;    /* Amarelo principal da New Holland */
-            --nh-dark-blue: #002f6c; /* Azul mais escuro para texto/cabeçalhos */
-            --nh-light-gray: #f0f2f5;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --card-bg: rgba(255, 255, 255, 0.9 );
-            --text-color: #1d1d1f;
-            --text-secondary: #555;
-            --shadow: 0 8px 24px rgba(0, 47, 108, 0.1);
-            --completed-bg: rgba(255, 205, 0, 0.15); /* Amarelo suave para concluído */
+            --nh-blue: #0052cc;
+            --nh-dark-blue: #003b95;
+            --nh-yellow: #ffc400;
+            --success-color: #36b37e;
+            --danger-color: #ff5630;
+            --background-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-color: #172b4d;
+            --text-secondary: #5e6c84;
+            --border-color: #dfe1e6;
+            --shadow: 0 4px 8px -2px rgba(9, 30, 66, 0.05 ), 0 0 1px rgba(9, 30, 66, 0.1);
+            --group-header-bg: #f4f5f7;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             margin: 0;
-            background-color: var(--nh-light-gray);
+            background-color: var(--background-color);
             color: var(--text-color);
-            min-height: 100vh;
         }
         .container {
-            padding: 25px;
-            max-width: 1800px;
+            padding: 30px;
+            max-width: 1600px;
             margin: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
         }
         h1 {
             color: var(--nh-dark-blue);
-            font-size: 2.5rem;
+            font-size: 2.4rem;
             font-weight: 800;
-            margin-bottom: 25px;
-            border-left: 5px solid var(--nh-yellow);
-            padding-left: 15px;
+            margin: 0;
         }
 
         .card {
             background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 16px;
-            border: 1px solid rgba(0, 74, 159, 0.1);
-            box-shadow: var(--shadow);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
             padding: 25px;
-            margin-bottom: 25px;
+            box-shadow: var(--shadow);
         }
 
         .kpi-grid {
@@ -65,189 +63,221 @@
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 25px;
         }
+        .kpi-card { padding: 20px; }
         .kpi-card .card-title {
-            display: flex;
-            align-items: center;
-            font-size: 1rem;
-            color: var(--text-secondary);
-            margin: 0 0 10px 0;
-            font-weight: 600;
+            display: flex; align-items: center; font-size: 0.9rem;
+            color: var(--text-secondary); margin: 0 0 8px 0; font-weight: 500;
         }
-        .kpi-card .card-title svg {
-            margin-right: 10px;
-            width: 20px;
-            height: 20px;
-            color: var(--nh-blue);
-        }
-        .kpi-card .card-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin: 0;
-        }
-        .kpi-card .card-subtitle {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-top: 5px;
-        }
-        
+        .kpi-card .card-title svg { margin-right: 8px; width: 18px; height: 18px; }
+        .kpi-card .card-value { font-size: 2.2rem; font-weight: 700; margin: 0; }
+        .kpi-card .card-subtitle { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
         .kpi-card.realizado .card-value { color: var(--success-color); }
         .kpi-card.faltante .card-value { color: var(--danger-color); }
         .kpi-card.progresso .card-value { color: var(--nh-blue); }
-        .kpi-card.estimativa .card-value { color: var(--nh-yellow); text-shadow: 0 0 5px rgba(0,0,0,0.1); }
+        .kpi-card.estimativa .card-value { color: #D99A00; }
 
-        .controles-container {
+        .level-card {
+            min-height: 150px;
             display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
+            flex-direction: column;
+        }
+        .level-card h2 { margin: 0 0 10px 0; font-size: 1.3rem; font-weight: 600; }
+        .level-progress-container {
+            position: relative;
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
             align-items: center;
         }
-        .controles-container label {
-            font-weight: 600;
-            color: var(--nh-dark-blue);
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
         }
+        .progress-marker {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 18px;
+            height: 18px;
+            background-color: var(--nh-blue);
+            border: 4px solid var(--card-bg);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: left 0.5s ease-out;
+            z-index: 3;
+            box-shadow: 0 0 10px rgba(0, 82, 204, 0.5);
+        }
+        .level-labels {
+            position: absolute;
+            width: 100%;
+            top: calc(50% + 15px);
+            left: 0;
+        }
+        .level-label {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .level-label .level-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .level-label .level-range {
+            font-size: 0.75rem;
+            color: #97a0af;
+            margin-top: 4px;
+        }
+        .level-label .level-name.active {
+            color: var(--nh-blue);
+            font-weight: 700;
+        }
+        #label-standard-container { left: 0; transform: translateX(0); }
+        #label-advanced-container { left: 70%; transform: translateX(-50%); }
+        #label-premium-container { left: 80%; transform: translateX(-50%); }
+        #label-bluebelt-container { left: 90%; transform: translateX(-50%); }
+        
+        /* --- CSS FINAL PARA O TOOLTIP --- */
+        .level-score-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translate(-50%, -10px); /* Ajusta para ficar um pouco acima do marcador */
+            background-color: var(--nh-dark-blue);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 4;
+            opacity: 1; /* Sempre visível */
+            visibility: visible; /* Sempre visível */
+        }
+
+        .controles-container { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+        .controles-container label { font-weight: 500; font-size: 0.9rem; color: var(--text-secondary); }
         .controles-container input, .controles-container select, .btn {
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 1em;
+            padding: 10px 14px; border: 1px solid var(--border-color);
+            border-radius: 8px; font-size: 0.95em; font-family: 'Inter', sans-serif;
         }
         .btn {
-            background-color: var(--nh-blue);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            transition: all 0.3s ease;
+            background: var(--nh-blue); color: white; font-weight: 600;
+            cursor: pointer; transition: all 0.2s ease;
         }
-        .btn:hover {
-            background-color: var(--nh-dark-blue);
-            box-shadow: 0 4px 10px rgba(0, 47, 108, 0.2);
-        }
-        .btn:disabled {
-            background-color: #aaa;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
+        .btn:hover { background-color: var(--nh-dark-blue); }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
         th {
-            background-color: var(--nh-dark-blue);
-            color: white;
-            padding: 14px;
-            text-align: left;
-            font-size: 0.9rem;
-            position: sticky;
-            top: 0;
+            background-color: var(--nh-dark-blue); color: white;
+            padding: 12px 15px; text-align: left; font-size: 0.8rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+            position: sticky; top: 0; z-index: 1;
         }
-        td {
-            padding: 14px;
-            text-align: left;
-            border-bottom: 1px solid #e5e5e5;
+        td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        .group-header-row td {
+            background-color: var(--group-header-bg);
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--nh-dark-blue);
+            border-top: 2px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
         }
-        tbody tr {
-            transition: background-color 0.3s ease;
+        .indicator-row td:first-child {
+            padding-left: 30px;
+            font-weight: 500;
         }
-        tbody tr:hover {
-            background-color: rgba(0, 74, 159, 0.05);
+        .indicator-row td:first-child::before {
+            content: '>';
+            margin-right: 10px;
+            color: var(--text-secondary);
         }
-        .linha-concluida {
-            background-color: var(--completed-bg) !important;
-        }
-        
-        input[type="number"], input[type="text"] {
-            width: 95%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-        input[type="checkbox"] {
-            cursor: pointer;
-            transform: scale(1.4);
-        }
-        .pontuacao-faltante {
-            font-weight: 600;
-            color: var(--danger-color);
-        }
-
-        .nivel-header h2 { margin: 0 0 20px 0; font-size: 1.5em; color: var(--nh-dark-blue); }
-        .niveis-container .nivel {
-            display: flex; justify-content: space-between; padding: 15px;
-            border-radius: 8px; background-color: rgba(0,0,0,0.05);
-            margin-bottom: 10px; font-weight: 600; transition: all 0.3s ease;
-        }
-        .niveis-container .nivel.ativo {
-            background: var(--nh-blue);
-            color: white;
-            transform: scale(1.03);
-            box-shadow: 0 4px 15px rgba(0, 74, 159, 0.4);
-        }
+        tbody tr:hover { background-color: #f1f6ff; }
+        .linha-concluida { background-color: rgba(54, 179, 126, 0.1) !important; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Dashboard de Performance <span style="color: var(--nh-blue);">NH360</span></h1>
-
-    <div class="kpi-grid card">
+    
+    <div class="card kpi-grid">
+        <!-- KPIs -->
         <div class="kpi-card realizado">
-            <p class="card-title"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Realizado</p>
+            <p class="card-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>Realizado</p>
             <p class="card-value" id="kpi-realizado">0.00</p>
         </div>
         <div class="kpi-card faltante">
-            <p class="card-title"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>Faltante</p>
+            <p class="card-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>Faltante</p>
             <p class="card-value" id="kpi-faltante">0.00</p>
         </div>
         <div class="kpi-card progresso">
-            <p class="card-title"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-3.75-2.25M21 18v-6c0-1.104-.896-2-2-2h-6" /></svg>Progresso</p>
+            <p class="card-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" /><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" /></svg>Progresso</p>
             <p class="card-value" id="kpi-progresso">0.0%</p>
         </div>
-        <div class="kpi-card estimativa">
-            <p class="card-title"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Estimativa Final</p>
+        <div class="card kpi-card estimativa">
+            <p class="card-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" /></svg>Estimativa Final</p>
             <p class="card-value" id="kpi-estimativa">0.00</p>
             <p class="card-subtitle" id="kpi-estimativa-sub">Representa 0.0% do total</p>
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: minmax(0, 3fr ) minmax(280px, 1fr); gap: 25px;">
-        <div class="card">
-            <div class="controles-container" style="padding-bottom: 25px;">
-                <div><label for="upload-arquivo">Importar XLSX:</label><input type="file" id="upload-arquivo" accept=".xlsx, .xls"></div>
-                <div><label for="filtro-subgrupo">Filtrar Sub-Grupo:</label><input type="text" id="filtro-subgrupo" onkeyup="filtrarTabela()" placeholder="Filtrar..."></div>
-                <div><label for="filtro-departamento">Departamento:</label><select id="filtro-departamento" onchange="filtrarTabela()"><option value="">Todos</option></select></div>
-                <button id="save-button" class="btn" disabled>Salvar Alterações</button>
+    <div class="card level-card">
+        <h2>Seu Nível</h2>
+        <div class="level-progress-container">
+            <div class="progress-track"></div>
+            <div class="progress-marker" id="progress-marker">
+                <div class="level-score-tooltip" id="level-score-tooltip">0 pts</div>
             </div>
-            <div style="overflow-x: auto; max-height: 60vh;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Sub-Grupo</th><th>Departamento</th><th>Sub-Categoria</th><th>Status</th>
-                            <th>Pont. Máxima</th><th>Pont. Atingida</th><th>Pont. Faltante</th>
-                            <th>Previsão</th><th>Contabilizar</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabela-dados">
-                        <tr><td colspan="9" style="text-align: center; padding: 50px; color: var(--text-secondary);">Carregando dados do Firebase...</td></tr>
-                    </tbody>
-                </table>
+            <div class="level-labels">
+                <div class="level-label" id="label-standard-container">
+                    <span class="level-name" id="label-standard">STANDARD</span>
+                    <span class="level-range">0 - 699</span>
+                </div>
+                <div class="level-label" id="label-advanced-container">
+                    <span class="level-name" id="label-advanced">ADVANCED</span>
+                    <span class="level-range">700 - 799</span>
+                </div>
+                <div class="level-label" id="label-premium-container">
+                    <span class="level-name" id="label-premium">PREMIUM</span>
+                    <span class="level-range">800 - 899</span>
+                </div>
+                <div class="level-label" id="label-bluebelt-container">
+                    <span class="level-name" id="label-bluebelt">BLUEBELT</span>
+                    <span class="level-range">900 - 1000</span>
+                </div>
             </div>
         </div>
-        <div class="card" id="nivel-card">
-            <div class="nivel-header"><h2>Seu Nível</h2></div>
-            <div class="niveis-container">
-                <div class="nivel" id="nivel-bluebelt"><span>BLUEBELT</span> <span>900 - 1000</span></div>
-                <div class="nivel" id="nivel-premium"><span>PREMIUM</span> <span>800 - 899</span></div>
-                <div class="nivel" id="nivel-advanced"><span>ADVANCED</span> <span>700 - 799</span></div>
-                <div class="nivel ativo" id="nivel-standard"><span>STANDARD</span> <span>0 - 699</span></div>
-            </div>
+    </div>
+
+    <div class="card">
+        <div class="controles-container" style="padding-bottom: 25px;">
+            <div><label for="upload-arquivo">Importar XLSX:</label><input type="file" id="upload-arquivo" accept=".xlsx, .xls"></div>
+            <div><label for="filtro-indicador">Filtrar Indicador:</label><input type="text" id="filtro-indicador" onkeyup="filtrarTabela( )" placeholder="Filtrar..."></div>
+            <div><label for="filtro-departamento">Departamento:</label><select id="filtro-departamento" onchange="filtrarTabela()"><option value="">Todos</option></select></div>
+            <button id="save-button" class="btn" disabled>Salvar Alterações</button>
+        </div>
+        <div style="overflow-y: auto; max-height: 60vh;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Indicador</th><th>Sub-Grupo</th><th>Departamento</th>
+                        <th>Pont. Máxima</th><th>Pont. Atingida</th><th>Previsão</th><th>Contabilizar</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-dados">
+                    <tr><td colspan="7" style="text-align: center; padding: 50px; color: var(--text-secondary);">Carregando dados do Firebase...</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
 <script>
-    // --- 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyDcjPa9jXsCCu6lNc1fjVg4Bzz1toKWAGY",
         authDomain: "agro-divel.firebaseapp.com",
@@ -256,61 +286,81 @@
         messagingSenderId: "583977436505",
         appId: "1:583977436505:web:3754ec029aebb3d9d67848"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const collectionRef = db.collection("NH360");
 
-    // --- 2. REFERÊNCIAS AOS ELEMENTOS DO DOM ---
     const tabelaBody = document.getElementById('tabela-dados');
     const saveButton = document.getElementById('save-button');
     const uploadInput = document.getElementById('upload-arquivo');
-    const filtroSubgrupo = document.getElementById('filtro-subgrupo');
+    const filtroIndicador = document.getElementById('filtro-indicador');
     const filtroDepartamento = document.getElementById('filtro-departamento');
+    const progressMarker = document.getElementById('progress-marker');
+    const levelScoreTooltip = document.getElementById('level-score-tooltip');
+    
     let localData = [];
     let unsavedChanges = false;
 
-    // --- 3. LÓGICA PRINCIPAL ---
     document.addEventListener('DOMContentLoaded', loadDataFromFirebase);
 
     function loadDataFromFirebase() {
-        collectionRef.orderBy("Sub-Grupo").get().then((querySnapshot) => {
+        collectionRef.get().then((querySnapshot) => {
             if (querySnapshot.empty) {
-                tabelaBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 50px;">Nenhum dado na coleção NH360. Importe um arquivo XLSX para começar.</td></tr>';
+                tabelaBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 50px;">Nenhum dado na coleção NH360. Importe um arquivo XLSX.</td></tr>';
                 return;
             }
-            localData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            let data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            data.sort((a, b) => {
+                const groupA = a.Grupo || ''; const groupB = b.Grupo || '';
+                const indicatorA = a.Indicador || ''; const indicatorB = b.Indicador || '';
+                if (groupA < groupB) return -1; if (groupA > groupB) return 1;
+                if (indicatorA < indicatorB) return -1; if (indicatorA > indicatorB) return 1;
+                return 0;
+            });
+
+            localData = data;
             popularTabela(localData);
             popularFiltros(localData);
         }).catch(error => {
-            console.error("Erro ao carregar dados do Firebase: ", error);
-            tabelaBody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: red;">Falha ao carregar dados. Verifique o console e as configurações do Firebase.</td></tr>';
+            console.error("Erro ao carregar dados: ", error);
+            tabelaBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Falha ao carregar dados. Verifique o console.</td></tr>';
         });
     }
 
     function popularTabela(dados) {
         tabelaBody.innerHTML = '';
-        dados.forEach(item => {
-            const pontuacaoMaxima = parseFloat(item['Pontuação Máxima'] || 0);
-            const pontuacaoAtingida = parseFloat(item['Pontuação Atingida'] || 0);
-            const previsao = parseFloat(item['Previsão'] || 0);
-            const contabilizar = item['Contabilizar'] || false;
+        const groupedData = dados.reduce((acc, item) => {
+            const group = item['Grupo'] || 'Sem Grupo';
+            if (!acc[group]) acc[group] = [];
+            acc[group].push(item);
+            return acc;
+        }, {});
 
-            const row = document.createElement('tr');
-            row.dataset.id = item.id;
-            row.innerHTML = `
-                <td>${item['Sub-Grupo'] || ''}</td>
-                <td>${item['Departamento'] || ''}</td>
-                <td>${item['Sub-Categoria'] || ''}</td>
-                <td>${item['Status'] || ''}</td>
-                <td>${pontuacaoMaxima.toFixed(2)}</td>
-                <td><input type="number" value="${pontuacaoAtingida.toFixed(2)}" step="0.01" oninput="handleInputChange(this)"></td>
-                <td class="pontuacao-faltante">${(pontuacaoMaxima - pontuacaoAtingida).toFixed(2)}</td>
-                <td><input type="number" value="${previsao.toFixed(2)}" placeholder="0.00" step="0.01" oninput="handleInputChange(this)"></td>
-                <td><input type="checkbox" ${contabilizar ? 'checked' : ''} onchange="handleInputChange(this)"></td>
-            `;
-            tabelaBody.appendChild(row);
-        });
+        const sortedGroups = Object.keys(groupedData).sort();
+
+        for (const groupName of sortedGroups) {
+            const groupHeaderRow = document.createElement('tr');
+            groupHeaderRow.className = 'group-header-row';
+            groupHeaderRow.innerHTML = `<td colspan="7">${groupName}</td>`;
+            tabelaBody.appendChild(groupHeaderRow);
+
+            groupedData[groupName].forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'indicator-row';
+                row.dataset.id = item.id;
+                row.innerHTML = `
+                    <td>${item['Indicador'] || ''}</td>
+                    <td>${item['Sub-Grupo'] || ''}</td>
+                    <td>${item['Departamento'] || ''}</td>
+                    <td>${(parseFloat(item['Pontuação Máxima'] || 0)).toFixed(2)}</td>
+                    <td><input type="number" value="${(parseFloat(item['Pontuação Atingida'] || 0)).toFixed(2)}" oninput="handleInputChange(this)"></td>
+                    <td><input type="number" value="${(parseFloat(item['Previsão'] || 0)).toFixed(2)}" oninput="handleInputChange(this)"></td>
+                    <td><input type="checkbox" ${item['Contabilizar'] ? 'checked' : ''} onchange="handleInputChange(this)"></td>
+                `;
+                tabelaBody.appendChild(row);
+            });
+        }
         atualizarTodosOsEstilosEValores();
     }
 
@@ -323,117 +373,110 @@
     }
 
     saveButton.addEventListener('click', () => {
+        saveButton.disabled = true; saveButton.textContent = 'Salvando...';
         const batch = db.batch();
-        tabelaBody.querySelectorAll('tr').forEach(row => {
+        tabelaBody.querySelectorAll('.indicator-row').forEach(row => {
             const docId = row.dataset.id;
             if (docId) {
                 const docRef = collectionRef.doc(docId);
+                const inputs = row.querySelectorAll('input');
                 const dataToSave = {
-                    'Pontuação Atingida': parseFloat(row.querySelector('input[type="number"]').value) || 0,
-                    'Previsão': parseFloat(row.querySelector('input[type="number"][placeholder="0.00"]').value) || 0,
-                    'Contabilizar': row.querySelector('input[type="checkbox"]').checked
+                    'Pontuação Atingida': parseFloat(inputs[0].value) || 0,
+                    'Previsão': parseFloat(inputs[1].value) || 0,
+                    'Contabilizar': inputs[2].checked
                 };
                 batch.update(docRef, dataToSave);
             }
         });
-
         batch.commit().then(() => {
-            console.log("Alterações salvas com sucesso no Firebase!");
-            unsavedChanges = false;
-            saveButton.disabled = true;
-        }).catch(error => console.error("Erro ao salvar em lote: ", error));
+            unsavedChanges = false; saveButton.textContent = 'Salvar Alterações';
+        }).catch(error => { saveButton.textContent = 'Erro ao Salvar'; });
     });
 
     uploadInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
+        const file = event.target.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
             const json = XLSX.utils.sheet_to_json(worksheet);
-            
             const batch = db.batch();
             json.forEach(item => {
                 const docRef = collectionRef.doc();
-                batch.set(docRef, {
-                    ...item,
-                    'Pontuação Atingida': item['Pontuação Atingida'] || 0,
-                    'Previsão': 0,
-                    'Contabilizar': false
-                });
+                batch.set(docRef, { ...item, 'Previsão': 0, 'Contabilizar': false });
             });
-
-            batch.commit().then(() => {
-                console.log("Dados do XLSX importados para o Firebase!");
-                loadDataFromFirebase();
-            }).catch(error => console.error("Erro ao importar XLSX: ", error));
+            batch.commit().then(() => loadDataFromFirebase());
         };
         reader.readAsArrayBuffer(file);
     });
 
     function handleInputChange(element) {
-        unsavedChanges = true;
-        saveButton.disabled = false;
+        unsavedChanges = true; saveButton.disabled = false;
         atualizarTodosOsEstilosEValores();
     }
 
     function atualizarTodosOsEstilosEValores() {
         let realizadoContabilizado = 0, previsaoTotal = 0, maximoTotal = 0, atingidoTotal = 0;
-
-        tabelaBody.querySelectorAll('tr').forEach(linha => {
+        tabelaBody.querySelectorAll('.indicator-row').forEach(linha => {
             if (linha.style.display === 'none') return;
-
-            const pontuacaoMaxima = parseFloat(linha.cells[4].innerText) || 0;
-            const atingidoInput = linha.querySelector('input[type="number"]');
-            const atingidoValor = parseFloat(atingidoInput.value) || 0;
-            const previsaoInput = linha.querySelector('input[type="number"][placeholder="0.00"]');
-            const previsaoValor = parseFloat(previsaoInput.value) || 0;
+            const pontuacaoMaxima = parseFloat(linha.cells[3].innerText) || 0;
+            const atingidoValor = parseFloat(linha.querySelector('input[type="number"]').value) || 0;
+            const previsaoValor = parseFloat(linha.querySelectorAll('input[type="number"]')[1].value) || 0;
             const checkbox = linha.querySelector('input[type="checkbox"]');
-
-            // Atualiza pontuação faltante na linha
-            linha.cells[6].innerText = (pontuacaoMaxima - atingidoValor).toFixed(2);
-            // Atualiza estilo de linha concluída
             linha.classList.toggle('linha-concluida', pontuacaoMaxima > 0 && atingidoValor >= pontuacaoMaxima);
-
-            // Acumula totais
-            atingidoTotal += atingidoValor;
-            previsaoTotal += previsaoValor;
-            maximoTotal += pontuacaoMaxima;
-            if (checkbox && checkbox.checked) {
-                realizadoContabilizado += previsaoValor;
-            }
+            atingidoTotal += atingidoValor; previsaoTotal += previsaoValor; maximoTotal += pontuacaoMaxima;
+            if (checkbox && checkbox.checked) { realizadoContabilizado += previsaoValor; }
         });
 
         const realizadoFinal = atingidoTotal + realizadoContabilizado;
         const estimativaFinal = atingidoTotal + previsaoTotal;
-        const progresso = (maximoTotal > 0) ? (atingidoTotal / maximoTotal) * 100 : 0;
+        const progresso = (maximoTotal > 0) ? (realizadoFinal / maximoTotal) * 100 : 0;
         const progressoEstimado = (maximoTotal > 0) ? (estimativaFinal / maximoTotal) * 100 : 0;
 
-        // Atualiza KPIs
         document.getElementById('kpi-realizado').innerText = realizadoFinal.toFixed(2);
-        document.getElementById('kpi-faltante').innerText = (maximoTotal - atingidoTotal).toFixed(2);
+        document.getElementById('kpi-faltante').innerText = (maximoTotal - realizadoFinal).toFixed(2);
         document.getElementById('kpi-progresso').innerText = progresso.toFixed(1) + '%';
         document.getElementById('kpi-estimativa').innerText = estimativaFinal.toFixed(2);
         document.getElementById('kpi-estimativa-sub').innerText = `Representa ${progressoEstimado.toFixed(1)}% do total`;
+        
+        const progressoPercentual = (maximoTotal > 0) ? (realizadoFinal / maximoTotal) * 100 : 0;
+        
+        progressMarker.style.left = `${Math.min(progressoPercentual, 100)}%`;
+        levelScoreTooltip.textContent = `${realizadoFinal.toFixed(2)} pts`;
 
-        // Atualiza Nível
-        document.querySelectorAll('.niveis-container .nivel').forEach(el => el.classList.remove('ativo'));
-        let nivelAtivoId = 'nivel-standard';
-        if (realizadoFinal >= 900) nivelAtivoId = 'nivel-bluebelt';
-        else if (realizadoFinal >= 800) nivelAtivoId = 'nivel-premium';
-        else if (realizadoFinal >= 700) nivelAtivoId = 'nivel-advanced';
-        document.getElementById(nivelAtivoId).classList.add('ativo');
+        document.querySelectorAll('.level-name').forEach(el => el.classList.remove('active'));
+        
+        if (realizadoFinal >= 900) {
+            document.getElementById('label-bluebelt').classList.add('active');
+        } else if (realizadoFinal >= 800) {
+            document.getElementById('label-premium').classList.add('active');
+        } else if (realizadoFinal >= 700) {
+            document.getElementById('label-advanced').classList.add('active');
+        } else {
+            document.getElementById('label-standard').classList.add('active');
+        }
     }
 
     function filtrarTabela() {
-        const textoSubgrupo = filtroSubgrupo.value.toLowerCase();
+        const textoIndicador = filtroIndicador.value.toLowerCase();
         const valorDepartamento = filtroDepartamento.value;
-        tabelaBody.querySelectorAll('tr').forEach(linha => {
-            const matchSubgrupo = linha.cells[0].textContent.toLowerCase().includes(textoSubgrupo);
-            const matchDepartamento = (valorDepartamento === "" || linha.cells[1].textContent === valorDepartamento);
-            linha.style.display = (matchSubgrupo && matchDepartamento) ? "" : "none";
+        let visibleGroups = new Set();
+
+        tabelaBody.querySelectorAll('.indicator-row').forEach(linha => {
+            const matchIndicador = linha.cells[0].textContent.toLowerCase().includes(textoIndicador);
+            const matchDepartamento = (valorDepartamento === "" || linha.cells[2].textContent === valorDepartamento);
+            if (matchIndicador && matchDepartamento) {
+                linha.style.display = "";
+                const groupHeaderRow = Array.from(tabelaBody.querySelectorAll('.group-header-row')).reverse().find(header => (header.compareDocumentPosition(linha) & Node.DOCUMENT_POSITION_FOLLOWING));
+                if (groupHeaderRow) { visibleGroups.add(groupHeaderRow.cells[0].textContent); }
+            } else {
+                linha.style.display = "none";
+            }
+        });
+
+        tabelaBody.querySelectorAll('.group-header-row').forEach(header => {
+            header.style.display = visibleGroups.has(header.cells[0].textContent) ? "" : "none";
         });
         atualizarTodosOsEstilosEValores();
     }
